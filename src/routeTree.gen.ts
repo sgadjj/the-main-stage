@@ -10,20 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as CreateRouteImport } from './routes/create'
+import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as QueueRouteImport } from './routes/queue'
-import { Route as UpcomingRouteImport } from './routes/upcoming'
-import { Route as WalletRouteImport } from './routes/wallet'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CreateRoute = CreateRouteImport.update({
-  id: '/create',
-  path: '/create',
+const AnnouncementsRoute = AnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -31,69 +28,35 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QueueRoute = QueueRouteImport.update({
-  id: '/queue',
-  path: '/queue',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UpcomingRoute = UpcomingRouteImport.update({
-  id: '/upcoming',
-  path: '/upcoming',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WalletRoute = WalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/create': typeof CreateRoute
+  '/announcements': typeof AnnouncementsRoute
   '/profile': typeof ProfileRoute
-  '/queue': typeof QueueRoute
-  '/upcoming': typeof UpcomingRoute
-  '/wallet': typeof WalletRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/create': typeof CreateRoute
+  '/announcements': typeof AnnouncementsRoute
   '/profile': typeof ProfileRoute
-  '/queue': typeof QueueRoute
-  '/upcoming': typeof UpcomingRoute
-  '/wallet': typeof WalletRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/create': typeof CreateRoute
+  '/announcements': typeof AnnouncementsRoute
   '/profile': typeof ProfileRoute
-  '/queue': typeof QueueRoute
-  '/upcoming': typeof UpcomingRoute
-  '/wallet': typeof WalletRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/profile' | '/queue' | '/upcoming' | '/wallet'
+  fullPaths: '/' | '/announcements' | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/profile' | '/queue' | '/upcoming' | '/wallet'
-  id:
-    | '__root__'
-    | '/'
-    | '/create'
-    | '/profile'
-    | '/queue'
-    | '/upcoming'
-    | '/wallet'
+  to: '/' | '/announcements' | '/profile'
+  id: '__root__' | '/' | '/announcements' | '/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CreateRoute: typeof CreateRoute
+  AnnouncementsRoute: typeof AnnouncementsRoute
   ProfileRoute: typeof ProfileRoute
-  QueueRoute: typeof QueueRoute
-  UpcomingRoute: typeof UpcomingRoute
-  WalletRoute: typeof WalletRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -105,11 +68,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/create': {
-      id: '/create'
-      path: '/create'
-      fullPath: '/create'
-      preLoaderRoute: typeof CreateRouteImport
+    '/announcements': {
+      id: '/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AnnouncementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -119,37 +82,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/queue': {
-      id: '/queue'
-      path: '/queue'
-      fullPath: '/queue'
-      preLoaderRoute: typeof QueueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/upcoming': {
-      id: '/upcoming'
-      path: '/upcoming'
-      fullPath: '/upcoming'
-      preLoaderRoute: typeof UpcomingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/wallet': {
-      id: '/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof WalletRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CreateRoute: CreateRoute,
+  AnnouncementsRoute: AnnouncementsRoute,
   ProfileRoute: ProfileRoute,
-  QueueRoute: QueueRoute,
-  UpcomingRoute: UpcomingRoute,
-  WalletRoute: WalletRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

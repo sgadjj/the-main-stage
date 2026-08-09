@@ -1,91 +1,111 @@
-import upcoming1 from "@/assets/upcoming-1.jpg";
-import upcoming2 from "@/assets/upcoming-2.jpg";
-import upcoming3 from "@/assets/upcoming-3.jpg";
+import { useSyncExternalStore } from "react";
 
-export type Upcoming = {
-  slug: string;
-  name: string;
+export type PostKind = "announcement" | "post";
+
+export type Post = {
+  id: string;
+  kind: PostKind;
+  channel: string;
+  handle: string;
   title: string;
+  body: string;
   category: string;
-  day: string;
-  time: string;
-  startsIn: string;
-  interested: number;
-  image: string;
-  promoted?: boolean;
+  date?: string;
+  time?: string;
+  duration?: string;
+  createdAt: string;
 };
 
-export const upcomingStreams: Upcoming[] = [
+export const categories = [
+  "حوار",
+  "تعليم",
+  "تقنية",
+  "أعمال",
+  "رياضة",
+  "ثقافة",
+] as const;
+
+const initialPosts: Post[] = [
   {
-    slug: "zainab-live",
-    name: "زينب",
-    title: "لقاء مباشر مع الجمهور",
-    category: "Entertainment",
-    day: "الخميس",
+    id: "p-1",
+    kind: "announcement",
+    channel: "قناة الاستوديو الرئيسي",
+    handle: "@studio.main",
+    title: "جلسة حوارية مفتوحة حول صناعة المحتوى",
+    body: "نقاش مباشر مع الجمهور حول أدوات الإنتاج، إدارة الوقت، وبناء جمهور مستدام. تُفتح الأسئلة خلال آخر عشرين دقيقة.",
+    category: "حوار",
+    date: "الخميس 14 أغسطس",
     time: "21:00",
-    startsIn: "يبدأ بعد 5 ساعات",
-    interested: 8420,
-    image: upcoming1,
-    promoted: true,
+    duration: "60 دقيقة",
+    createdAt: "قبل 3 ساعات",
   },
   {
-    slug: "omar-night",
-    name: "عمر",
-    title: "ليلة موسيقى حية",
-    category: "Music",
-    day: "الخميس",
-    time: "22:30",
-    startsIn: "يبدأ بعد 7 ساعات",
-    interested: 3110,
-    image: upcoming2,
+    id: "p-2",
+    kind: "announcement",
+    channel: "مختبر التقنية",
+    handle: "@tech.lab",
+    title: "مراجعة مباشرة لأدوات البث الاحترافية",
+    body: "استعراض عملي لإعدادات الصوت والصورة، مع مقارنة بين ثلاث منظومات إنتاج بميزانيات مختلفة.",
+    category: "تقنية",
+    date: "الجمعة 15 أغسطس",
+    time: "19:30",
+    duration: "45 دقيقة",
+    createdAt: "قبل يوم",
   },
   {
-    slug: "kenji-plays",
-    name: "Kenji",
-    title: "Speedrun Challenge",
-    category: "Gaming",
-    day: "الجمعة",
-    time: "19:00",
-    startsIn: "يبدأ بعد يوم",
-    interested: 1985,
-    image: upcoming3,
+    id: "p-3",
+    kind: "post",
+    channel: "غرفة الأعمال",
+    handle: "@business.room",
+    title: "ملخص البث السابق ومحاور الحلقة القادمة",
+    body: "شكرًا لكل من حضر. نشرنا ملخصًا للنقاط الأساسية، والحلقة القادمة ستركز على التسعير وبناء العروض.",
+    category: "أعمال",
+    createdAt: "قبل يومين",
   },
 ];
 
-export type QueueSlot = {
-  time: string;
-  name: string;
-  category: string;
-  duration: string;
-  tier: string;
-  score: number;
-  state: "done" | "live" | "next" | "open";
+let posts: Post[] = initialPosts;
+const listeners = new Set<() => void>();
+
+function emit() {
+  listeners.forEach((l) => l());
+}
+
+export function addPost(input: Omit<Post, "id" | "createdAt">) {
+  posts = [
+    { ...input, id: `p-${Date.now()}`, createdAt: "الآن" },
+    ...posts,
+  ];
+  emit();
+}
+
+export function usePosts() {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    () => posts,
+    () => posts,
+  );
+}
+
+export const liveNow = {
+  channel: "قناة الاستوديو الرئيسي",
+  handle: "@studio.main",
+  title: "جلسة حوارية مفتوحة حول صناعة المحتوى",
+  category: "حوار",
+  startedAt: "20:00",
+  remainingSeconds: 18 * 60 + 32,
+  viewers: 184521,
 };
 
-export const queueDay = "الخميس";
-
-export const queueSlots: QueueSlot[] = [
-  { time: "18:00", name: "Creator A", category: "Talk", duration: "30 دقيقة", tier: "🔵 مؤهل", score: 68, state: "done" },
-  { time: "19:00", name: "Creator B", category: "Music", duration: "60 دقيقة", tier: "🟣 جيد", score: 77, state: "done" },
-  { time: "20:00", name: "زينب", category: "Entertainment", duration: "ساعتان", tier: "🟡 متميز", score: 91, state: "live" },
-  { time: "21:00", name: "Creator X", category: "Gaming", duration: "30 دقيقة", tier: "🔵 مؤهل", score: 64, state: "next" },
-  { time: "21:30", name: "Slot متاح", category: "—", duration: "15 دقيقة", tier: "🟢 جديد", score: 0, state: "open" },
-  { time: "22:30", name: "عمر", category: "Music", duration: "60 دقيقة", tier: "🟣 جيد", score: 82, state: "open" },
-];
-
-export const tiers = [
-  { icon: "🟢", label: "جديد", time: "10–15 دقيقة" },
-  { icon: "🔵", label: "مؤهل", time: "30 دقيقة" },
-  { icon: "🟣", label: "جيد", time: "60 دقيقة" },
-  { icon: "🟡", label: "متميز", time: "ساعتان" },
-  { icon: "⭐", label: "مشاهير / أحداث خاصة", time: "حسب الاتفاق" },
-];
-
-export const creditPacks = [
-  { amount: 100, price: "0.99$" },
-  { amount: 1000, price: "8.99$", popular: true },
-  { amount: 10000, price: "79.99$" },
-];
+export const nextUp = {
+  channel: "مختبر التقنية",
+  handle: "@tech.lab",
+  time: "21:00",
+  duration: "45 دقيقة",
+};
 
 export function formatNumber(n: number) {
   return n.toLocaleString("en-US");
