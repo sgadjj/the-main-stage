@@ -74,10 +74,10 @@ function WalletPage() {
         <h2 className="font-display text-xl">آخر العمليات</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {[
-            ["دعم زينب", "-1,000"],
-            ["شراء Credits", "+1,000"],
-            ["دعم Kenji", "-250"],
-          ].map(([label, amount]) => (
+            { label: "دعم زينب", amount: "-1,000" },
+            { label: "شراء Credits", amount: "+1,000" },
+            { label: "دعم Kenji", amount: "-250" },
+          ].map(({ label, amount }) => (
             <li
               key={label}
               className="flex items-center justify-between rounded-lg bg-surface-2/40 px-3 py-2"
