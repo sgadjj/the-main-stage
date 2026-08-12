@@ -91,7 +91,7 @@ function ProfilePage() {
 
   async function onPickAvatar(file?: File) {
     if (!file || !account) return;
-    if (!file.type.startsWith("image/")) return toast.error("اختر ملف صورة");
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة"); return; }
     const url = await readFile(file);
     saveAccount({ ...account, avatarUrl: url });
     toast.success("تم تحديث صورة الحساب");
@@ -99,7 +99,7 @@ function ProfilePage() {
 
   async function onPickPostImage(file?: File) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) return toast.error("اختر ملف صورة");
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة"); return; }
     setImage(await readFile(file));
   }
 
