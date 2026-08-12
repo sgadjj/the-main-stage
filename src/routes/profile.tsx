@@ -1,7 +1,16 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Radio, Star, LogOut } from "lucide-react";
+import {
+  BadgeCheck,
+  CalendarClock,
+  ImagePlus,
+  LogOut,
+  Pencil,
+  Star,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +33,8 @@ import {
   initials,
   pointsToUsd,
   POINTS_PER_USD,
+  nextAvailableSlot,
+  systemSlots,
   type PostKind,
 } from "@/lib/turnlive-data";
 
@@ -33,7 +44,8 @@ export const Route = createFileRoute("/profile")({
       { title: "حسابي — TURNLIVE" },
       {
         name: "description",
-        content: "صفحة المستخدم: تعديل الملف، نشر منشور أو إعلان بث، ورصيد النجوم القابل للتحويل.",
+        content:
+          "صفحة المستخدم: تعديل الملف ورفع صورة من جهازك، نشر إعلان بث بموعد يحدده النظام، ورصيد النجوم.",
       },
       { property: "og:title", content: "حسابي — TURNLIVE" },
       {
@@ -45,6 +57,15 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
+function readFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("read-error"));
+    reader.readAsDataURL(file);
+  });
+}
+
 function ProfilePage() {
   const navigate = useNavigate();
   const account = useAccount();
@@ -55,22 +76,42 @@ function ProfilePage() {
   const [body, setBody] = useState("");
   const [image, setImage] = useState("");
   const [category, setCategory] = useState<string>(categories[0]);
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [duration, setDuration] = useState("");
+  const [slotId, setSlotId] = useState(nextAvailableSlot()?.id ?? "");
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(account?.name ?? "");
   const [bio, setBio] = useState(account?.bio ?? "");
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const postImageInput = useRef<HTMLInputElement>(null);
 
   if (!account) return null;
   const mine = posts.filter((p) => p.handle === account.handle);
+  const slot = systemSlots.find((s) => s.id === slotId);
+  const openSlots = systemSlots.filter((s) => !s.taken);
+
+  async function onPickAvatar(file?: File) {
+    if (!file || !account) return;
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة"); return; }
+    const url = await readFile(file);
+    saveAccount({ ...account, avatarUrl: url });
+    toast.success("تم تحديث صورة الحساب");
+  }
+
+  async function onPickPostImage(file?: File) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة"); return; }
+    setImage(await readFile(file));
+  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!account) return;
     if (!title.trim() || !body.trim()) {
       toast.error("يرجى إدخال العنوان والتفاصيل");
+      return;
+    }
+    if (kind === "announcement" && !slot) {
+      toast.error("لا يوجد موعد متاح حاليًا في الطابور");
       return;
     }
     addPost({
@@ -81,16 +122,15 @@ function ProfilePage() {
       title: title.trim(),
       body: body.trim(),
       category,
-      ...(image.trim() ? { image: image.trim() } : {}),
-      ...(kind === "announcement" ? { date, time, duration } : {}),
+      ...(image ? { image } : {}),
+      ...(kind === "announcement" && slot
+        ? { date: slot.date, time: slot.time, duration: slot.duration }
+        : {}),
     });
-    toast.success(kind === "announcement" ? "تم نشر الإعلان" : "تم نشر المنشور");
+    toast.success(kind === "announcement" ? "تم حجز موعدك ونشر الإعلان" : "تم نشر المنشور");
     setTitle("");
     setBody("");
     setImage("");
-    setDate("");
-    setTime("");
-    setDuration("");
     navigate({ to: "/announcements" });
   }
 
@@ -104,38 +144,60 @@ function ProfilePage() {
 
   return (
     <AppShell>
-      <section className="panel p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-surface-2 font-display text-lg text-foreground">
-              {account.avatar}
+      {/* ترويسة الملف */}
+      <section className="panel overflow-hidden">
+        <div className="h-24 bg-[linear-gradient(120deg,oklch(0.30_0.09_25),oklch(0.18_0.02_20))]" />
+        <div className="-mt-10 flex flex-wrap items-end justify-between gap-4 p-6">
+          <div className="flex items-end gap-4">
+            <div className="relative">
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface-2 font-display text-2xl text-foreground">
+                {account.avatarUrl ? (
+                  <img src={account.avatarUrl} alt={account.name} className="h-full w-full object-cover" />
+                ) : (
+                  <UserRound className="h-8 w-8 text-muted-foreground" />
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => avatarInput.current?.click()}
+                aria-label="تغيير صورة الحساب"
+                className="absolute -bottom-2 -end-2 rounded-full border border-border bg-background p-2 text-primary transition-colors hover:bg-surface-2"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+              </button>
+              <input
+                ref={avatarInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void onPickAvatar(e.target.files?.[0])}
+              />
             </div>
-            <div>
-              <h1 className="font-display text-2xl text-foreground">{account.name}</h1>
+
+            <div className="pb-1">
+              <h1 className="flex items-center gap-2 font-display text-2xl text-foreground">
+                {account.name}
+                <BadgeCheck className="h-5 w-5 text-primary" />
+              </h1>
               <p className="text-sm text-muted-foreground">
                 {account.handle} · turnlive.app/{account.handle.replace("@", "")}
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">{account.bio}</p>
+              {account.bio && <p className="mt-1 text-sm text-muted-foreground">{account.bio}</p>}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/studio"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              <Radio className="h-4 w-4" /> بدء بث
-            </Link>
+
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}
-              className="rounded-full border border-border px-4 py-2 text-sm text-foreground transition-colors hover:bg-surface-2"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-foreground transition-colors hover:bg-surface-2"
             >
-              تعديل الملف
+              <Pencil className="h-3.5 w-3.5" /> تعديل الملف
             </button>
             <button
               type="button"
               onClick={signOut}
-              aria-label="خروج"
+              aria-label="تسجيل الخروج"
               className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
@@ -144,7 +206,7 @@ function ProfilePage() {
         </div>
 
         {editing && (
-          <div className="mt-5 grid gap-4 border-t border-border/60 pt-5 sm:grid-cols-2">
+          <div className="grid gap-4 border-t border-border/60 p-6 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="name">اسم القناة</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -154,12 +216,12 @@ function ProfilePage() {
               <Input id="bio" value={bio} onChange={(e) => setBio(e.target.value)} />
             </div>
             <div>
-              <Button onClick={saveProfile}>حفظ</Button>
+              <Button onClick={saveProfile}>حفظ التغييرات</Button>
             </div>
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+        <div className="grid grid-cols-3 gap-3 border-t border-border/60 p-6 text-center">
           <Stat label="منشوراتي" value={String(mine.length)} />
           <Stat label="بثوث سابقة" value="12" />
           <Stat
@@ -170,10 +232,54 @@ function ProfilePage() {
         </div>
       </section>
 
+      {/* الموعد من النظام */}
+      <section className="panel mt-5 p-6">
+        <h2 className="flex items-center gap-2 font-display text-xl text-foreground">
+          <CalendarClock className="h-5 w-5 text-primary" /> موعد بثك في الطابور
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          النظام يحدد المواعيد المتاحة حسب مستواك — لا يمكن اختيار وقت خارج الطابور.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {systemSlots.map((s) => {
+            const active = s.id === slotId;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                disabled={s.taken}
+                onClick={() => setSlotId(s.id)}
+                className={`rounded-xl border p-4 text-start transition-colors ${
+                  s.taken
+                    ? "cursor-not-allowed border-border/50 bg-surface-2/20 opacity-50"
+                    : active
+                      ? "border-primary bg-primary/10"
+                      : "border-border/70 bg-surface-2/40 hover:border-primary/60"
+                }`}
+              >
+                <p className="font-display text-xl text-foreground">
+                  {s.time} <span className="text-sm text-muted-foreground">· {s.date}</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {s.duration} · {s.level}
+                </p>
+                <p className={`mt-2 text-[11px] ${s.taken ? "text-muted-foreground" : "text-primary"}`}>
+                  {s.taken ? "محجوز" : active ? "المحدد لك" : "متاح"}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+        {openSlots.length === 0 && (
+          <p className="mt-3 text-sm text-muted-foreground">لا توجد مواعيد متاحة الآن.</p>
+        )}
+      </section>
+
+      {/* نشر */}
       <section className="panel mt-5 p-6">
         <h2 className="font-display text-xl text-foreground">نشر جديد</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          صور ونصوص فقط — إعلان بث بموعده أو منشور عام.
+          صور ونصوص فقط — إعلان بث بموعد النظام، أو منشور عام.
         </p>
 
         <form onSubmit={onSubmit} className="mt-5 grid gap-4">
@@ -221,12 +327,35 @@ function ProfilePage() {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="image">رابط الصورة (اختياري)</Label>
-            <Input
-              id="image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://..."
+            <Label>صورة المنشور</Label>
+            {image ? (
+              <div className="relative overflow-hidden rounded-xl border border-border/70">
+                <img src={image} alt="معاينة الصورة" className="max-h-64 w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImage("")}
+                  aria-label="حذف الصورة"
+                  className="absolute top-2 end-2 rounded-full border border-border bg-background/80 p-2 text-foreground backdrop-blur"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => postImageInput.current?.click()}
+                className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+              >
+                <ImagePlus className="h-5 w-5 text-primary" />
+                اختر صورة من جهازك
+              </button>
+            )}
+            <input
+              ref={postImageInput}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => void onPickPostImage(e.target.files?.[0])}
             />
           </div>
 
@@ -247,34 +376,11 @@ function ProfilePage() {
           </div>
 
           {kind === "announcement" && (
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="grid gap-2">
-                <Label htmlFor="date">التاريخ</Label>
-                <Input
-                  id="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  placeholder="الخميس 14 أغسطس"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="time">الوقت</Label>
-                <Input
-                  id="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  placeholder="20:00"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="duration">المدة</Label>
-                <Input
-                  id="duration"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  placeholder="60 دقيقة"
-                />
-              </div>
+            <div className="rounded-xl border border-border/70 bg-surface-2/40 p-4 text-sm">
+              <p className="text-muted-foreground">الموعد الذي منحه لك النظام</p>
+              <p className="mt-1 font-display text-lg text-foreground">
+                {slot ? `${slot.date} · ${slot.time} · ${slot.duration}` : "لا يوجد موعد متاح"}
+              </p>
             </div>
           )}
 

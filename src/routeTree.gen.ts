@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as StudioRouteImport } from './routes/studio'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,44 +28,35 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudioRoute = StudioRouteImport.update({
-  id: '/studio',
-  path: '/studio',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/announcements': typeof AnnouncementsRoute
   '/profile': typeof ProfileRoute
-  '/studio': typeof StudioRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/announcements': typeof AnnouncementsRoute
   '/profile': typeof ProfileRoute
-  '/studio': typeof StudioRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/announcements': typeof AnnouncementsRoute
   '/profile': typeof ProfileRoute
-  '/studio': typeof StudioRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/announcements' | '/profile' | '/studio'
+  fullPaths: '/' | '/announcements' | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/announcements' | '/profile' | '/studio'
-  id: '__root__' | '/' | '/announcements' | '/profile' | '/studio'
+  to: '/' | '/announcements' | '/profile'
+  id: '__root__' | '/' | '/announcements' | '/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnnouncementsRoute: typeof AnnouncementsRoute
   ProfileRoute: typeof ProfileRoute
-  StudioRoute: typeof StudioRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,13 +82,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/studio': {
-      id: '/studio'
-      path: '/studio'
-      fullPath: '/studio'
-      preLoaderRoute: typeof StudioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnnouncementsRoute: AnnouncementsRoute,
   ProfileRoute: ProfileRoute,
-  StudioRoute: StudioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

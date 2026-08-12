@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, Timer, Radio, ArrowLeft } from "lucide-react";
+import { Eye, Timer, Radio, ArrowLeft, Maximize2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { LiveOverlay } from "@/components/LiveOverlay";
 import { liveNow, nextUp, formatNumber } from "@/lib/turnlive-data";
 
 export const Route = createFileRoute("/")({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/")({
 function LiveNow() {
   const [left, setLeft] = useState(liveNow.remainingSeconds);
   const [viewers, setViewers] = useState(liveNow.viewers);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -53,11 +55,19 @@ function LiveNow() {
           {liveNow.channel} · {liveNow.handle} · {liveNow.category}
         </p>
 
-        <div className="mt-6 aspect-video w-full rounded-xl border border-border/70 bg-surface-2/40">
+        <div className="relative mt-6 aspect-video w-full overflow-hidden rounded-xl border border-border/70 bg-surface-2/40">
           <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
             <Radio className="h-7 w-7 text-primary" />
             <p className="text-sm">نافذة البث المباشر</p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="absolute bottom-3 end-3 inline-flex items-center gap-2 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-live transition-transform hover:scale-105"
+          >
+            <Maximize2 className="h-3.5 w-3.5" /> فتح البث
+          </button>
         </div>
 
         <dl className="mt-6 grid grid-cols-3 gap-3">
@@ -66,6 +76,17 @@ function LiveNow() {
           <Stat icon={<Radio className="h-4 w-4" />} label="بدأ الساعة" value={liveNow.startedAt} />
         </dl>
       </section>
+
+      <LiveOverlay
+        open={open}
+        onClose={() => setOpen(false)}
+        channel={liveNow.channel}
+        handle={liveNow.handle}
+        title={liveNow.title}
+        viewers={viewers}
+        remainingSeconds={left}
+      />
+
 
       <section className="panel mt-5 flex items-center justify-between gap-4 p-5">
         <div>
