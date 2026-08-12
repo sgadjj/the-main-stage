@@ -36,13 +36,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
 
-            <Link
-              to="/studio"
-              aria-label="بدء بث"
-              className="ms-1 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              <Radio className="h-3.5 w-3.5" /> بث
-            </Link>
+
+
 
             <Link
               to="/profile"
