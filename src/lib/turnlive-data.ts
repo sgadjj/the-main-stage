@@ -35,9 +35,31 @@ export type Account = {
   name: string;
   handle: string;
   avatar: string;
+  avatarUrl?: string;
   bio: string;
   points: number;
 };
+
+/* ---------- الطابور: النظام يحدد الوقت وليس صانع المحتوى ---------- */
+export type Slot = {
+  id: string;
+  date: string;
+  time: string;
+  duration: string;
+  level: string;
+  taken: boolean;
+};
+
+export const systemSlots: Slot[] = [
+  { id: "s-1", date: "اليوم", time: "21:00", duration: "15 دقيقة", level: "مستوى جديد", taken: true },
+  { id: "s-2", date: "اليوم", time: "22:30", duration: "30 دقيقة", level: "مستوى مؤهل", taken: false },
+  { id: "s-3", date: "غدًا", time: "19:00", duration: "60 دقيقة", level: "مستوى جيد", taken: false },
+  { id: "s-4", date: "غدًا", time: "21:30", duration: "30 دقيقة", level: "مستوى مؤهل", taken: false },
+];
+
+export function nextAvailableSlot(): Slot | undefined {
+  return systemSlots.find((s) => !s.taken);
+}
 
 export const categories = [
   "حوار",
