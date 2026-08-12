@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, Timer, Radio, ArrowLeft } from "lucide-react";
+import { Eye, Timer, Radio, ArrowLeft, Maximize2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { LiveOverlay } from "@/components/LiveOverlay";
 import { liveNow, nextUp, formatNumber } from "@/lib/turnlive-data";
 
 export const Route = createFileRoute("/")({
