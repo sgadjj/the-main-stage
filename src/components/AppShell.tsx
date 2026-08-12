@@ -35,17 +35,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {label}
               </Link>
             ))}
-
-
-
-
             <Link
               to="/profile"
               aria-label="حسابي"
-              className="ms-1 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface-2 text-[11px] font-bold text-foreground transition-colors hover:border-primary"
+              className="ms-1 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-2 text-[11px] font-bold text-foreground transition-colors hover:border-primary"
             >
-              {account?.avatar ?? "TL"}
+              {account?.avatarUrl ? (
+                <img src={account.avatarUrl} alt="صورة الحساب" className="h-full w-full object-cover" />
+              ) : account ? (
+                account.avatar
+              ) : (
+                <UserRound className="h-4 w-4" />
+              )}
             </Link>
+
           </nav>
         </div>
       </header>
