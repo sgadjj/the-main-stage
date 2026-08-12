@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Radio } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { useAccount } from "@/lib/turnlive-data";
 
 const nav = [
